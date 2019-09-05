@@ -1,4 +1,4 @@
-<h1 align="center" style="color:blue;">stuff </h1>
+<h1 align="center">stuff </h1>
 ***
 General things, notes and everything I can imagine
 
