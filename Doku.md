@@ -185,10 +185,30 @@ end
 ## Drahtlose Netzwerke
 
 - **Warum funktioniert die Überwachung eines bestimmten Rechners nur, wenn dieser sich neu mit dem Netzwerk verbindet oder einige Zeit abgewartet wurde?**
-1. Es funktioniert nur, weil sich die Rechner erst mit unserem Raspberry verbinden müssen. Dafür muss entweder die Verbindung verloren oder erneuert werden, es dauert auf jeden Fall etwas Zeit.
+1. Es funktioniert nur, weil sich die Rechner erst mit unserem Raspberry verbinden müssen. Dafür muss entweder die Verbindung verloren gehen oder erneuert werden, es dauert auf jeden Fall etwas Zeit.
 
 - **Kann man eine Neuverbindung des Zielrechners mit dem Netzwerk erzwingen?**
 1. Man kann spezielle "Deauth packets" versenden, welche dafür sorgen, dass Wifi Clients abgemeldet werden und versuchen, sich erneut zu authentifizieren.
 
 - **Welche Unterschiede sind bei verschlüsselten und unverschlüsselten Verbindungen im überwachten Datenverkehr zu beobachten?**
 1. Bei unverschlüsselter Verbindung kann man den http Traffic komplett lesen, bei verschlüsselter Verbindung (https) nur die verschlüsselten Daten, welche verschlüsselt über tls übertragen werden. Keine Auslese möglich.
+
+***
+
+# Reflektion von unserer Seite
+
+## PRO
+
+- Dokumentation hat geholfen, einen Überblick zu behalten
+
+- Man ist auf sich alleine gestellt und muss entsprechend bei verschiedenen Möglichkeiten seine eigenen Wege finden
+
+- Versuche in 2er Gruppen gut. Mehr Menschen wäre nervig und alleine wäre man lost
+
+## CONTRA
+
+- Insgesamt umfangreich und dadurch zeitaufwändig
+
+- Teilweise unklar, was aus Sicht der Dokumentation bei den Fragen erwartet wird
+
+- Fragen nicht immer 100% präzise formuliert
