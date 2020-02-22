@@ -1,0 +1,95 @@
+# Goal: Rename multiple mp3 files with their properties to get them ready for iTunes
+# todo: Find a way to add the music cover to every track
+#  Keep the standard Path more general
+#  Automate the numbering within albums
+
+import eyed3 as d3
+import os
+import os.path
+import glob
+import datetime
+
+path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
+os.chdir(path)
+d3.log.setLevel("ERROR")
+
+
+def nameTracks(folder, genre="[Hip-Hop/Rap]"):
+    """ Tracks are saved as "Artist - TrackName"
+    Tracks: Option for same genre, all title numbers get a 1, same year, different artists, track name, album like "Track Name - Single"
+    """
+    os.chdir(folder)
+    for file in glob.glob("*.mp3"):
+        if file.find("-") != -1:
+            trackArtist = file.partition("-")[0]
+            title = file.partition(" - ")[2].partition(".mp3")[0]
+            audiofile = d3.load(file)
+            audiofile.tag.genre = genre
+            audiofile.tag.release_date = datetime.datetime.now().year
+            audiofile.tag.artist = trackArtist
+            audiofile.tag.track_num = 1
+            if title.find(" ft.") != -1:  # cut off features als well for the album name
+                audiofile.tag.album = title.partition(" ft.")[0] + " - Single"
+            else:
+                audiofile.tag.album = title + ' - Single'
+            audiofile.tag.title = title
+            audiofile.tag.save()
+            os.rename(file, title + ".mp3")  # also rename the whole file to have just the title of the track
+        else:
+            print("File already formatted or not named properly! ")
+    print("Track naming finished! ")
+
+
+def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
+    """ Albums are saved in a folder inside the folder of the artist
+    Album: Same Interpret, Year, Genre, Album Name, Different Track Numbers
+    """
+    for file in glob.glob("*.mp3"):
+        title = file.partition(".mp3")[0]
+        audiofile = d3.load(file)
+        audiofile.tag.genre = genre
+        audiofile.tag.release_date = datetime.datetime.now().year
+        audiofile.tag.artist = artist
+        number = input("Enter track number of " + title + " : ")  # todo: Automate the numbering of the tracks
+        audiofile.tag.track_num = int(number)
+        audiofile.tag.album = album
+        audiofile.tag.title = title
+        audiofile.tag.save()
+    print("Album named! ")
+
+
+# Mainloop
+while True:
+    question = input('Album or Tracks? ')
+    # name a couple of tracks
+    if question in ["Tracks", "Track", "t", "T", "tr"]:
+        os.chdir("C:\\Users\\Flavio\\Music\\Youtube\\Weiteres")
+        while True:
+            foldername = input("Enter folder name: ")
+            if os.path.exists(foldername):
+                print("Folder found!")
+                nameTracks(foldername)
+                break
+            else:
+                print("Folder not found")
+    # name an album
+    elif question in ["Album", "a", "A", "al"]:
+        os.chdir("C:\\Users\\Flavio\\Music\\Youtube")
+        while True:
+            albumArtist = input("Which Artist? ")
+            albumName = input("Which Album? ")
+            if os.path.exists(albumArtist + "\\" + albumName):
+                os.chdir(albumArtist + "\\" + albumName)
+                specialGenre = input("Name a genre (default: [Hip-Hop/Rap]): ")
+                if specialGenre != "":
+                    nameAlbum(albumArtist, albumName, specialGenre)
+                else:
+                    nameAlbum(albumArtist, albumName)
+                break
+            else:
+                print("Artist or Album not found! ")
+    # exit
+    elif question == "exit":
+        exit()
+    else:
+        print("Please enter valid answer! ")
