@@ -18,11 +18,11 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
     """ Tracks are saved as "Artist - TrackName"
     Tracks: Option for same genre, all title numbers get a 1, same year, different artists, track name, album like "Track Name - Single"
     """
-    os.chdir(folder)
-    for file in glob.glob("*.mp3"):
+    #os.chdir(folder)
+    for file in glob.glob(os.path.join(folder,"*.mp3")):
         if file.find("-") != -1:
-            trackArtist = file.partition("-")[0]
-            title = file.partition(" - ")[2].partition(".mp3")[0]
+            trackArtist = os.path.basename(file).partition("-")[0]
+            title = os.path.basename(file).partition(" - ")[2].partition(".mp3")[0]
             audiofile = d3.load(file)
             audiofile.tag.genre = genre
             audiofile.tag.release_date = datetime.datetime.now().year
@@ -34,7 +34,7 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
                 audiofile.tag.album = title + ' - Single'
             audiofile.tag.title = title
             audiofile.tag.save()
-            os.rename(file, title + ".mp3")  # also rename the whole file to have just the title of the track
+            os.rename(file, os.path.join(folder, title + ".mp3"))  # also rename the whole file to have just the title of the track
         else:
             print("File already formatted or not named properly! ")
     print("Track naming finished! ")
