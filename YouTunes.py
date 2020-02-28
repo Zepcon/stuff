@@ -8,6 +8,9 @@ import os
 import os.path
 import glob
 import datetime
+import requests
+from bs4 import BeautifulSoup
+import re
 
 path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
 os.chdir(path)
@@ -18,8 +21,8 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
     """ Tracks are saved as "Artist - TrackName"
     Tracks: Option for same genre, all title numbers get a 1, same year, different artists, track name, album like "Track Name - Single"
     """
-    #os.chdir(folder)
-    for file in glob.glob(os.path.join(folder,"*.mp3")):
+    # os.chdir(folder)
+    for file in glob.glob(os.path.join(folder, "*.mp3")):
         if file.find("-") != -1:
             trackArtist = os.path.basename(file).partition("-")[0]
             title = os.path.basename(file).partition(" - ")[2].partition(".mp3")[0]
@@ -58,7 +61,22 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
     print("Album named! ")
 
 
+# https://genius.com/albums/Gunna/Drip-or-drown-2
+def generateTracklist(artist, album):
+    base = "https://genius.com/albums"
+    url = base + "/" + artist + "/" + album.replace(" ", "-")
+    raw = requests.get(url)
+    soup = BeautifulSoup(raw.text, "html.parser")
+    try:
+        titles = soup.findAll(class_="chart_row-content-title")
+        for i in titles:
+            i = re.sub(" +", " ", i.text.partition("Lyrics")[0].replace("\n", "")).lstrip()
+            print(i)
+    except:
+        print("Could not find titles to album")
+
 # Mainloop
+generateTracklist("Gunna","drip or drown 2")
 while True:
     question = input('Album or Tracks? ')
     # name a couple of tracks
