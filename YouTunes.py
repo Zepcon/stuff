@@ -1,7 +1,5 @@
 # Goal: Rename multiple mp3 files with their properties to get them ready for iTunes
 # todo: Find a way to add the music cover to every track
-#  Keep the standard Path more general
-#  Automate the numbering within albums
 
 import eyed3 as d3
 import os
@@ -11,6 +9,7 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 import re
+import string
 
 path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
 os.chdir(path)
@@ -47,36 +46,58 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
     """ Albums are saved in a folder inside the folder of the artist
     Album: Same Interpret, Year, Genre, Album Name, Different Track Numbers
     """
+    trackList = generateTracklist(artist, album)
     for file in glob.glob("*.mp3"):
         title = file.partition(".mp3")[0]
         audiofile = d3.load(file)
         audiofile.tag.genre = genre
         audiofile.tag.release_date = datetime.datetime.now().year
         audiofile.tag.artist = artist
-        number = input("Enter track number of " + title + " : ")  # todo: Automate the numbering of the tracks
-        audiofile.tag.track_num = int(number)
+        try:
+            trackNum = trackList.index(title.partition(" ft.")[0]) + 1  # automation of track numbers
+            audiofile.tag.track_num = trackNum
+        except:
+            print("Error occured, track has to be numbered manually")
+            number = input("Enter track number of " + title + " : ")
+            audiofile.tag.track_num = int(number)
         audiofile.tag.album = album
         audiofile.tag.title = title
         audiofile.tag.save()
     print("Album named! ")
 
 
-# https://genius.com/albums/Gunna/Drip-or-drown-2
 def generateTracklist(artist, album):
+    """
+    Using genius.com pattern to get the tracklist of the album.
+    """
     base = "https://genius.com/albums"
-    url = base + "/" + artist + "/" + album.replace(" ", "-")
+    url = base + "/" + artist.replace(" ", "-") + "/" + album.replace(" ", "-")
     raw = requests.get(url)
     soup = BeautifulSoup(raw.text, "html.parser")
     try:
         titles = soup.findAll(class_="chart_row-content-title")
-        for i in titles:
-            i = re.sub(" +", " ", i.text.partition("Lyrics")[0].replace("\n", "")).lstrip()
-            print(i)
+        for i in range(len(titles)):
+            titles[i] = re.sub(" +", " ", titles[i].text.partition("Lyrics")[0].replace("\n", "").replace("\xa0", " ")).strip()  # das kann noch schöner
+            titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))  # Cut Features off for better comparison
+        if len(titles) == 0:
+            print("Could not find titles to album")
+        print(titles)
+        return titles
     except:
         print("Could not find titles to album")
 
+
+def findCover(artist, album):
+    """
+    Genius also should work for finding an album cover, single maybe not (too bad resolution).
+    """
+    # .findAll(class_="cover_art-image")[0]['src']
+    # todo: Find a reliable way to get cover in good quality (about 1000 x 1000)
+    #  Download cover (at best only temporarily)
+    #  Set cover for every track of album (should work with eyed3)
+
+
 # Mainloop
-generateTracklist("Gunna","drip or drown 2")
 while True:
     question = input('Album or Tracks? ')
     # name a couple of tracks
