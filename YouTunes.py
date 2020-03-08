@@ -47,6 +47,7 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
     Album: Same Interpret, Year, Genre, Album Name, Different Track Numbers
     """
     trackList = generateTracklist(artist, album)
+    cover = findCover(artist, album)
     for file in glob.glob("*.mp3"):
         title = file.partition(".mp3")[0]
         audiofile = d3.load(file)
@@ -54,13 +55,14 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
         audiofile.tag.release_date = datetime.datetime.now().year
         audiofile.tag.artist = artist
         try:
-            trackNum = trackList.index(title.partition(" ft.")[0]) + 1  # automation of track numbers
+            trackNum = trackList.index(title.partition(" ft.")[0].partition(" feat.")[0]) + 1  # automation of track numbers
             audiofile.tag.track_num = trackNum
         except:
             print("Error occured, track has to be numbered manually")
             number = input("Enter track number of " + title + " : ")
             audiofile.tag.track_num = int(number)
         audiofile.tag.album = album
+        audiofile.tag.images.set(3, open(cover, "rb").read(), "image/jpeg")
         audiofile.tag.title = title
         audiofile.tag.save()
     print("Album named! ")
@@ -81,7 +83,6 @@ def generateTracklist(artist, album):
             titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))  # Cut Features off for better comparison
         if len(titles) == 0:
             print("Could not find titles to album")
-        print(titles)
         return titles
     except:
         print("Could not find titles to album")
@@ -95,6 +96,21 @@ def findCover(artist, album):
     # todo: Find a reliable way to get cover in good quality (about 1000 x 1000)
     #  Download cover (at best only temporarily)
     #  Set cover for every track of album (should work with eyed3)
+    base = "https://genius.com/albums"
+    url = base + "/" + artist.replace(" ", "-") + "/" + album.replace(" ", "-")
+    raw = requests.get(url)
+    imagePath = "C:/Users/Flavio/Pictures/Covers/"
+    soup = BeautifulSoup(raw.text, "html.parser")
+    try:
+        imageURL = soup.findAll(class_="cover_art-image")[0]['src']
+        coverRaw = requests.get(imageURL)
+        filename = album + ".jpg"
+        with open(imagePath + filename, "wb") as outfile:
+            outfile.write(coverRaw.content)
+        print("Cover found!")
+        return imagePath + filename
+    except:
+        print("Error, cover not found")
 
 
 # Mainloop
