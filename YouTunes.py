@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import string
+import shutil
 
 path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
 os.chdir(path)
@@ -99,14 +100,16 @@ def findCover(artist, album):
     base = "https://genius.com/albums"
     url = base + "/" + artist.replace(" ", "-") + "/" + album.replace(" ", "-")
     raw = requests.get(url)
-    imagePath = "C:/Users/Flavio/Pictures/Covers/"
+    imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
     soup = BeautifulSoup(raw.text, "html.parser")
     try:
         imageURL = soup.findAll(class_="cover_art-image")[0]['src']
-        coverRaw = requests.get(imageURL)
+        coverRaw = requests.get(imageURL, stream=True)
         filename = album + ".jpg"
         with open(imagePath + filename, "wb") as outfile:
-            outfile.write(coverRaw.content)
+            coverRaw.raw.decode_content = True
+            shutil.copyfileobj(coverRaw.raw,outfile)
+            #outfile.write(coverRaw.content)
         print("Cover found!")
         return imagePath + filename
     except:
