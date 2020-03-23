@@ -10,18 +10,17 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import string
-import shutil
+import PIL.Image
 
 path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
 os.chdir(path)
-d3.log.setLevel("ERROR")
+d3.log.setLevel("ERROR")  # So there are no warnings for non-standard genres
 
 
 def nameTracks(folder, genre="[Hip-Hop/Rap]"):
     """ Tracks are saved as "Artist - TrackName"
     Tracks: Option for same genre, all title numbers get a 1, same year, different artists, track name, album like "Track Name - Single"
     """
-    # os.chdir(folder)
     for file in glob.glob(os.path.join(folder, "*.mp3")):
         if file.find("-") != -1:
             trackArtist = os.path.basename(file).partition("-")[0]
@@ -56,14 +55,16 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
         audiofile.tag.release_date = datetime.datetime.now().year
         audiofile.tag.artist = artist
         try:
-            trackNum = trackList.index(title.partition(" ft.")[0].partition(" feat.")[0]) + 1  # automation of track numbers
+            # todo: Check so machen, dass nur groß oder nur kleinschreibung angeschaut werden und Zeichen wie ' berücksichtigen
+            trackNum = trackList.index(string.capwords(title.partition(" ft.")[0].partition(" feat.")[0])) + 1  # automation of track numbers
             audiofile.tag.track_num = trackNum
         except:
             print("Error occured, track has to be numbered manually")
             number = input("Enter track number of " + title + " : ")
             audiofile.tag.track_num = int(number)
         audiofile.tag.album = album
-        audiofile.tag.images.set(3, open(cover, "rb").read(), "image/jpeg")
+        if cover != "error":
+            audiofile.tag.images.set(3, open(cover, "rb").read(), "image/jpeg")
         audiofile.tag.title = title
         audiofile.tag.save()
     print("Album named! ")
@@ -80,7 +81,7 @@ def generateTracklist(artist, album):
     try:
         titles = soup.findAll(class_="chart_row-content-title")
         for i in range(len(titles)):
-            titles[i] = re.sub(" +", " ", titles[i].text.partition("Lyrics")[0].replace("\n", "").replace("\xa0", " ")).strip()  # das kann noch schöner
+            titles[i] = re.sub(" +", " ", titles[i].text.partition("Lyrics")[0].replace("\n", "").replace("\xa0", " ")).replace("’", "").strip()  # das kann noch schöner
             titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))  # Cut Features off for better comparison
         if len(titles) == 0:
             print("Could not find titles to album")
@@ -91,29 +92,31 @@ def generateTracklist(artist, album):
 
 def findCover(artist, album):
     """
-    Genius also should work for finding an album cover, single maybe not (too bad resolution).
+    Using genius.com to find the album cover to given Artist and album
     """
-    # .findAll(class_="cover_art-image")[0]['src']
-    # todo: Find a reliable way to get cover in good quality (about 1000 x 1000)
-    #  Download cover (at best only temporarily)
-    #  Set cover for every track of album (should work with eyed3)
+    # todo: add single support
     base = "https://genius.com/albums"
     url = base + "/" + artist.replace(" ", "-") + "/" + album.replace(" ", "-")
     raw = requests.get(url)
     imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
     soup = BeautifulSoup(raw.text, "html.parser")
     try:
-        imageURL = soup.findAll(class_="cover_art-image")[0]['src']
+        imageURL = soup.findAll(class_="cover_art-image")[0]['srcset'].split(" ")[0]  # fucking bullshit
+        splittedLink = imageURL.split("/")
+        splittedLink[4] = "1000x1000"  # Download images in 1000x1000 resolution
+        imageURL = "/".join(splittedLink)
         coverRaw = requests.get(imageURL, stream=True)
-        filename = album + ".jpg"
+        filename = artist + "-" + album + ".jpg"
         with open(imagePath + filename, "wb") as outfile:
-            coverRaw.raw.decode_content = True
-            shutil.copyfileobj(coverRaw.raw,outfile)
-            #outfile.write(coverRaw.content)
-        print("Cover found!")
+            for block in coverRaw.iter_content(1024):
+                if not block:
+                    break
+                outfile.write(block)
+        print("Cover found! Resolution is: " + str(PIL.Image.open(imagePath + filename).size))
         return imagePath + filename
     except:
         print("Error, cover not found")
+        return "Error"
 
 
 # Mainloop
