@@ -1,5 +1,7 @@
+# coding: utf-8
 # Goal: Rename multiple mp3 files with their properties to get them ready for iTunes
 # todo: Find a way to add the music cover to every track
+
 
 import eyed3 as d3
 import os
@@ -24,7 +26,8 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
     for file in glob.glob(os.path.join(folder, "*.mp3")):
         if file.find("-") != -1:
             trackArtist = os.path.basename(file).partition("-")[0]
-            title = os.path.basename(file).partition(" - ")[2].partition(".mp3")[0]
+            title = os.path.basename(file).partition(
+                " - ")[2].partition(".mp3")[0]
             audiofile = d3.load(file)
             audiofile.tag.genre = genre
             audiofile.tag.release_date = datetime.datetime.now().year
@@ -36,7 +39,8 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
                 audiofile.tag.album = title + ' - Single'
             audiofile.tag.title = title
             audiofile.tag.save()
-            os.rename(file, os.path.join(folder, title + ".mp3"))  # also rename the whole file to have just the title of the track
+            # also rename the whole file to have just the title of the track
+            os.rename(file, os.path.join(folder, title + ".mp3"))
         else:
             print("File already formatted or not named properly! ")
     print("Track naming finished! ")
@@ -47,7 +51,7 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
     Album: Same Interpret, Year, Genre, Album Name, Different Track Numbers
     """
     trackList = generateTracklist(artist, album)
-    cover = findCover(artist, album)
+    cover = findAlbumCover(artist,album)
     for file in glob.glob("*.mp3"):
         title = file.partition(".mp3")[0]
         audiofile = d3.load(file)
@@ -56,7 +60,8 @@ def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
         audiofile.tag.artist = artist
         try:
             # todo: Check so machen, dass nur groß oder nur kleinschreibung angeschaut werden und Zeichen wie ' berücksichtigen
-            trackNum = trackList.index(string.capwords(title.partition(" ft.")[0].partition(" feat.")[0])) + 1  # automation of track numbers
+            trackNum = trackList.index(string.capwords(title.partition(
+                " ft.")[0].partition(" feat.")[0])) + 1  # automation of track numbers
             audiofile.tag.track_num = trackNum
         except:
             print("Error occured, track has to be numbered manually")
@@ -82,7 +87,8 @@ def generateTracklist(artist, album):
         titles = soup.findAll(class_="chart_row-content-title")
         for i in range(len(titles)):
             titles[i] = re.sub(" +", " ", titles[i].text.partition("Lyrics")[0].replace("\n", "").replace("\xa0", " ")).replace("’", "").strip()  # das kann noch schöner
-            titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))  # Cut Features off for better comparison
+            # Cut Features off for better comparison
+            titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))
         if len(titles) == 0:
             print("Could not find titles to album")
         return titles
@@ -90,20 +96,21 @@ def generateTracklist(artist, album):
         print("Could not find titles to album")
 
 
-def findCover(artist, album):
+def findAlbumCover(artist, album):
     """
     Using genius.com to find the album cover to given Artist and album
     """
-    # todo: add single support
     base = "https://genius.com/albums"
     url = base + "/" + artist.replace(" ", "-") + "/" + album.replace(" ", "-")
     raw = requests.get(url)
     imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
     soup = BeautifulSoup(raw.text, "html.parser")
     try:
-        imageURL = soup.findAll(class_="cover_art-image")[0]['srcset'].split(" ")[0]  # fucking bullshit
+        imageURL = soup.findAll(
+            class_="cover_art-image")[0]['srcset'].split(" ")[0]  # fucking bullshit
         splittedLink = imageURL.split("/")
-        splittedLink[4] = "1000x1000"  # Download images in 1000x1000 resolution
+        # Download images in 1000x1000 resolution
+        splittedLink[4] = "1000x1000"
         imageURL = "/".join(splittedLink)
         coverRaw = requests.get(imageURL, stream=True)
         filename = artist + "-" + album + ".jpg"
@@ -112,7 +119,40 @@ def findCover(artist, album):
                 if not block:
                     break
                 outfile.write(block)
-        print("Cover found! Resolution is: " + str(PIL.Image.open(imagePath + filename).size))
+        print("Cover found! Resolution is: " +
+              str(PIL.Image.open(imagePath + filename).size))
+        return imagePath + filename
+    except:
+        print("Error, cover not found")
+        return "Error"
+
+
+def findSingleCover(artist, single):
+    """
+    Using genius.com to find the song cover to given Artist and song
+    """
+    # todo: add single support
+    base = "https://genius.com/"
+    url = base + artist.replace(" ", "-") + "-" + \
+        single.replace(" ", "-") + "-lyrics"
+    raw = requests.get(url)
+    imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
+    soup = BeautifulSoup(raw.text, "html.parser")
+    try:
+        imageURL = soup.findAll(class_="cover_art-image")[0]["src"]
+        splittedLink = imageURL.split("/")
+        # Download images in 1000x1000 resolution
+        splittedLink[4] = "1000x1000"
+        imageURL = "/".join(splittedLink)
+        coverRaw = requests.get(imageURL, stream=True)
+        filename = artist + "-" + single + ".jpg"
+        with open(imagePath + filename, "wb") as outfile:
+            for block in coverRaw.iter_content(1024):
+                if not block:
+                    break
+                outfile.write(block)
+        print("Cover found! Resolution is: " +
+              str(PIL.Image.open(imagePath + filename).size))
         return imagePath + filename
     except:
         print("Error, cover not found")
