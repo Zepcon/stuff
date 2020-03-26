@@ -1,18 +1,9 @@
 # coding: utf-8
 # Goal: Rename multiple mp3 files with their properties to get them ready for iTunes
-# todo: Find a way to add the music cover to every track
-
 
 import eyed3 as d3
-import os
-import os.path
-import glob
-import datetime
-import requests
+import os, os.path, glob, datetime, requests, re, string, PIL.Image
 from bs4 import BeautifulSoup
-import re
-import string
-import PIL.Image
 
 path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
 os.chdir(path)
@@ -26,8 +17,8 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
     for file in glob.glob(os.path.join(folder, "*.mp3")):
         if file.find("-") != -1:
             trackArtist = os.path.basename(file).partition("-")[0]
-            title = os.path.basename(file).partition(
-                " - ")[2].partition(".mp3")[0]
+            title = os.path.basename(file).partition(" - ")[2].partition(".mp3")[0]
+            singleCover = findSingleCover(trackArtist,title)
             audiofile = d3.load(file)
             audiofile.tag.genre = genre
             audiofile.tag.release_date = datetime.datetime.now().year
@@ -37,6 +28,8 @@ def nameTracks(folder, genre="[Hip-Hop/Rap]"):
                 audiofile.tag.album = title.partition(" ft.")[0] + " - Single"
             else:
                 audiofile.tag.album = title + ' - Single'
+            if singleCover != "error":
+                audiofile.tag.images.set(3, open(singleCover, "rb").read(), "image/jpeg")
             audiofile.tag.title = title
             audiofile.tag.save()
             # also rename the whole file to have just the title of the track
@@ -131,7 +124,6 @@ def findSingleCover(artist, single):
     """
     Using genius.com to find the song cover to given Artist and song
     """
-    # todo: add single support
     base = "https://genius.com/"
     url = base + artist.replace(" ", "-") + "-" + \
         single.replace(" ", "-") + "-lyrics"
