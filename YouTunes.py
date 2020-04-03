@@ -1,10 +1,10 @@
 # coding: utf-8
 # Goal: Rename multiple mp3 files with their properties to get them ready for iTunes
 
-'''
+"""
 Idea space:
 - Ask user to delete the Cover_Images folder on end
-'''
+"""
 
 import eyed3 as d3
 import os, os.path, glob, datetime, requests, re, string, PIL.Image, youtube_dl
@@ -28,7 +28,7 @@ def nameTracks(folderpath, genre="[Hip-Hop/Rap]"):
                 singleCover = findSingleCover(trackArtist, title)
                 audiofile = d3.load(filepath)
                 audiofile.tag.genre = genre
-                audiofile.tag.release_date = datetime.datetime.now().year # bug: year is shown on windows explorer but not in iTunes, same string
+                audiofile.tag.release_date = datetime.datetime.now().year  # bug: year is shown on windows explorer but not in iTunes, same string
                 audiofile.tag.artist = trackArtist
                 audiofile.tag.track_num = 1
                 if title.find(" ft.") != -1:  # cut off features als well for the album name
@@ -48,31 +48,32 @@ def nameTracks(folderpath, genre="[Hip-Hop/Rap]"):
     print("All Tracks managed! ")
 
 
-def nameAlbum(artist, album, genre="[Hip-Hop/Rap]"):
+def nameAlbum(folderpath, artist, album, genre="[Hip-Hop/Rap]"):
     """ Albums are saved in a folder inside the folder of the artist
     Album: Same Interpret, Year, Genre, Album Name, Different Track Numbers
     """
     trackList = generateTracklist(artist, album)
     cover = findAlbumCover(artist, album)
-    for file in glob.glob("*.mp3"):
-        title = file.partition(".mp3")[0]
-        audiofile = d3.load(file)
-        audiofile.tag.genre = genre
-        audiofile.tag.release_date = datetime.datetime.now().year
-        audiofile.tag.artist = artist
-        try:
-            # todo: Check so machen, dass nur groß oder nur kleinschreibung angeschaut werden und Zeichen wie ' berücksichtigen
-            trackNum = trackList.index(string.capwords(title.partition(" ft.")[0].partition(" feat.")[0])) + 1  # automation of track numbers
-            audiofile.tag.track_num = trackNum
-        except:
-            print("Error occured, track has to be numbered manually")
-            number = input("Enter track number of " + title + " : ")
-            audiofile.tag.track_num = int(number)
-        audiofile.tag.album = album
-        if cover != "error":
-            audiofile.tag.images.set(3, open(cover, "rb").read(), "image/jpeg")
-        audiofile.tag.title = title
-        audiofile.tag.save()
+    for file in os.listdir(folderpath):
+        if file.endswith(".mp3"):
+            title = file.partition(".mp3")[0]
+            audiofile = d3.load(folderpath + "/" + file)
+            audiofile.tag.genre = genre
+            audiofile.tag.release_date = datetime.datetime.now().year
+            audiofile.tag.artist = artist
+            try:
+                # todo: Check so machen, dass nur groß oder nur kleinschreibung angeschaut werden und Zeichen wie ' berücksichtigen
+                trackNum = trackList.index(string.capwords(title.partition(" ft.")[0].partition(" feat.")[0])) + 1  # automation of track numbers
+                audiofile.tag.track_num = trackNum
+            except:
+                print("Error occured, track has to be numbered manually")
+                number = input("Enter track number of " + title + " : ")
+                audiofile.tag.track_num = int(number)
+            audiofile.tag.album = album
+            if cover != "Error":
+                audiofile.tag.images.set(3, open(cover, "rb").read(), "image/jpeg")
+            audiofile.tag.title = title
+            audiofile.tag.save()
     print("Album named! ")
 
 
@@ -89,6 +90,7 @@ def generateTracklist(artist, album):
         for i in range(len(titles)):
             titles[i] = re.sub(" +", " ", titles[i].text.partition("Lyrics")[0].replace("\n", "").replace("\xa0", " ")).replace("’", "").strip()  # das kann noch schöner
             # Cut Features off for better comparison
+            # todo Features funktionieren noch nicht so ganz
             titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))
         if len(titles) == 0:
             print("Could not find titles to album")
@@ -104,7 +106,10 @@ def findAlbumCover(artist, album):
     base = "https://genius.com/albums"
     url = base + "/" + artist.replace(" ", "-") + "/" + album.replace(" ", "-")
     raw = requests.get(url)
-    imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
+    #imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
+    imagePath = getcwdFormat() + "/" + "Cover_Images/"
+    if not os.path.exists("Cover_Images"):
+        os.mkdir("Cover_Images")
     soup = BeautifulSoup(raw.text, "html.parser")
     try:
         imageURL = soup.findAll(
@@ -181,13 +186,17 @@ def downLoadTracks(trackList, folder=""):
                 pass
     for file in (os.listdir(getcwdFormat())):
         if file.endswith(".mp3"):
-            os.rename(getcwdFormat() + "/" + file, getcwdFormat() + "/" + folder + "/" + renameDownloadTrack(file))
+            try:
+                os.rename(getcwdFormat() + "/" + file, getcwdFormat() + "/" + folder + "/" + renameDownloadTrack(file))
+            except:
+                print("File already exists!")
+                pass
 
 
-# Name to "Artist - Trackname"
+# Deletes the url id of youtube_dl and cuts off things in brackets like (Audio) because no one wants this
 def renameDownloadTrack(trackName):
-    trackName = trackName[0:trackName.rindex("-")]
-    return trackName + ".mp3"
+    trackName = re.sub("[(\[].*?[)\]]", "", trackName[0:trackName.rindex("-")]).strip()
+    return re.sub(' +', ' ', trackName) + ".mp3"
 
 
 # Make os path suitable for python chdir
@@ -201,7 +210,11 @@ def getcwdFormat():
     return cwd
 
 
+magic = ["https://www.youtube.com/watch?v=lYNmKKg_Djs", "https://www.youtube.com/watch?v=yu8NPwhOV2I", "https://www.youtube.com/watch?v=xc3lse938xA", "https://www.youtube.com/watch?v=hE6V0r-c4dU",
+         "https://www.youtube.com/watch?v=gpqml9PHbtw", "https://www.youtube.com/watch?v=WH8sJipEtZs", "https://www.youtube.com/watch?v=CqZPkR5yDiI", "https://www.youtube.com/watch?v=B1DOTuNKmY4"]
+
 # Mainloop
+print("Welcome to YouTunes!")
 while True:
     question = input("Download Tracks or album? ")
     # name a couple of tracks
@@ -215,7 +228,7 @@ while True:
         while question not in ["f", "finished", "fi", "finish"]:
             track_urls.append(question)
             question = input("Enter a song url or \"finish\": ")
-        downLoadTracks(track_urls, "Singles - " + str(datetime.date.today()))
+        downLoadTracks(track_urls, folderName)
         print("Make sure every Track is named like Artist - TrackName Features")
         print("Example: Drake - Sneakin feat. 21 Savage")
         print("If Track has correct name just press enter, otherwise enter correct name and then enter")
@@ -231,25 +244,39 @@ while True:
         print("Every file in folder " + folderName + " has been named.")
         print("Next up: Setting the stats for iTunes")  # todo Manage different genres here
         nameTracks(folderPath)
-
-
-
     # name an album
     elif question in ["Album", "a", "A", "al"]:
-        os.chdir("C:\\Users\\Flavio\\Music\\Youtube")
-        while True:
-            albumArtist = input("Which Artist? ")
-            albumName = input("Which Album? ")
-            if os.path.exists(albumArtist + "\\" + albumName):
-                os.chdir(albumArtist + "\\" + albumName)
-                specialGenre = input("Name a genre (default: [Hip-Hop/Rap]): ")
-                if specialGenre != "":
-                    nameAlbum(albumArtist, albumName, specialGenre)
+        # os.chdir("C:\\Users\\Flavio\\Music\\Youtube")
+        albumArtist = input("Which Artist? ")
+        albumName = input("Which Album? ")
+        folderName = albumArtist + " - " + albumName
+        folderPath = getcwdFormat() + "/" + folderName
+        if not os.path.exists(folderName):
+            os.mkdir(folderName)
+        track_urls = []
+        question = input("Enter a song url or \"finish\": ")
+        # while question not in ["f", "finished", "fi", "finish", "fin"]:
+        #   track_urls.append(question)
+        #  question = input("Enter a album song url or \"finish\": ")
+        downLoadTracks(magic, folderName)  # todo Change!!!!!
+        print("Make sure every Track is named like Artist - TrackName Features")
+        print("Example: Drake - Sneakin feat. 21 Savage")
+        print("If Track has correct name just press enter, otherwise enter correct name and then enter")
+        for file in (os.listdir(folderPath)):
+            if file.endswith(".mp3"):
+                print(file.split(" - ")[1])
+                newname = input("Enter or new name: ")
+                if newname == "":
+                    os.rename(getcwdFormat() + "/" + folderName + "/" + file, getcwdFormat() + "/" + folderName + "/" + file.split(" - ")[1] + ".mp3")
                 else:
-                    nameAlbum(albumArtist, albumName)
-                break
-            else:
-                print("Artist or Album not found! ")
+                    os.rename(getcwdFormat() + "/" + folderName + "/" + file, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
+                    print("Saved new name!")
+        specialGenre = input("Name a genre (default: [Hip-Hop/Rap]): ")
+        print("Now doing the iTunes stats")
+        if specialGenre != "":
+            nameAlbum(folderPath, albumArtist, albumName, specialGenre)
+        else:
+            nameAlbum(folderPath, albumArtist, albumName)
     # exit
     elif question == "exit":
         exit()
