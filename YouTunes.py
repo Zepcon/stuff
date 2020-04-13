@@ -7,7 +7,7 @@ Idea space:
 """
 
 import eyed3 as d3
-import os, os.path, glob, datetime, requests, re, string, PIL.Image, youtube_dl
+import os, os.path, datetime, requests, re, string, PIL.Image, youtube_dl
 from bs4 import BeautifulSoup
 
 # path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
@@ -24,7 +24,7 @@ def nameTracks(folderpath, genre="[Hip-Hop/Rap]"):
             if file.find("-") != -1:
                 filepath = folderpath + "/" + file
                 trackArtist = file.partition("-")[0].strip()
-                title = file.partition(" - ")[2].partition(".mp3")[0].strip()
+                title = file.partition(" - ")[2].partition('.mp3')[0].strip()
                 singleCover = findSingleCover(trackArtist, title)
                 audiofile = d3.load(filepath)
                 audiofile.tag.genre = genre
@@ -74,7 +74,7 @@ def nameAlbum(folderpath, artist, album, genre="[Hip-Hop/Rap]"):
                 audiofile.tag.images.set(3, open(cover, "rb").read(), "image/jpeg")
             audiofile.tag.title = title
             audiofile.tag.save()
-    print("Album named! ")
+    print("Album finished! ")
 
 
 def generateTracklist(artist, album):
@@ -90,8 +90,7 @@ def generateTracklist(artist, album):
         for i in range(len(titles)):
             titles[i] = re.sub(" +", " ", titles[i].text.partition("Lyrics")[0].replace("\n", "").replace("\xa0", " ")).replace("’", "").strip()  # das kann noch schöner
             # Cut Features off for better comparison
-            # todo Features funktionieren noch nicht so ganz
-            titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]))
+            titles[i] = string.capwords(re.sub("[(\[].*?[)\]]", "", titles[i]).strip())
         if len(titles) == 0:
             print("Could not find titles to album")
         return titles
@@ -138,7 +137,7 @@ def findSingleCover(artist, single):
     Using genius.com to find the song cover to given Artist and song
     """
     base = "https://genius.com/"
-    url = base + artist.replace(" ", "-") + "-" + single.replace(" ", "-") + "-lyrics"
+    url = base + artist.replace(" ", "-") + "-" + single.replace(",","").replace(" ", "-") + "-lyrics"
     raw = requests.get(url)
     # imagePath = "C:/Users/Flavio/Music/Youtube/CoverTemp/"
     imagePath = getcwdFormat() + "/" + "Cover_Images/"
@@ -158,10 +157,10 @@ def findSingleCover(artist, single):
                 if not block:
                     break
                 outfile.write(block)
-        print("Cover found!")
+        print("Cover found for track " + single)
         return imagePath + filename
     except:
-        print("Error, cover not found")
+        print("Error, cover not found for track " + single)
         return "Error"
 
 
@@ -204,14 +203,21 @@ def pathReplace(path):
     path = path.replace("\\", "/")
     return path
 
-
+# Get cwd with right format
 def getcwdFormat():
     cwd = os.getcwd().replace("\\", "/")
     return cwd
 
-
-magic = ["https://www.youtube.com/watch?v=lYNmKKg_Djs", "https://www.youtube.com/watch?v=yu8NPwhOV2I", "https://www.youtube.com/watch?v=xc3lse938xA", "https://www.youtube.com/watch?v=hE6V0r-c4dU",
-         "https://www.youtube.com/watch?v=gpqml9PHbtw", "https://www.youtube.com/watch?v=WH8sJipEtZs", "https://www.youtube.com/watch?v=CqZPkR5yDiI", "https://www.youtube.com/watch?v=B1DOTuNKmY4"]
+# Get new foldername
+def getnewFolder(folder):
+    folderFound = False
+    i = 1
+    while not folderFound:
+        if os.path.exists(folder+str(i)):
+            i = i+1
+        else:
+            folderFound = True
+    return folder + "(" + str(i) + ")"
 
 # Mainloop
 print("Welcome to YouTunes!")
@@ -220,9 +226,12 @@ while True:
     # name a couple of tracks
     if question in ["Tracks", "Track", "t", "T", "tr"]:
         folderName = "Singles - " + str(datetime.date.today())
-        folderPath = getcwdFormat() + "/" + folderName
-        if not os.path.exists(folderName):
+        if os.path.exists(folderName):
+            folderName = getnewFolder(folderName)
             os.mkdir(folderName)
+        else:
+            os.mkdir(folderName)
+        folderPath = getcwdFormat() + "/" + folderName
         track_urls = []
         question = input("Enter a song url or \"finish\": ")
         while question not in ["f", "finished", "fi", "finish"]:
@@ -232,44 +241,48 @@ while True:
         print("Make sure every Track is named like Artist - TrackName Features")
         print("Example: Drake - Sneakin feat. 21 Savage")
         print("If Track has correct name just press enter, otherwise enter correct name and then enter")
-        for file in (os.listdir(folderPath)):
-            if file.endswith(".mp3"):
-                print(file)
+        for mp3 in (os.listdir(folderPath)):
+            if mp3.endswith(".mp3"):
+                print(mp3)
                 newname = input("Enter or new name: ")
                 if newname == "":
                     pass
                 else:
-                    os.rename(getcwdFormat() + "/" + folderName + "/" + file, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
+                    os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
                     print("Saved new name!")
         print("Every file in folder " + folderName + " has been named.")
         print("Next up: Setting the stats for iTunes")  # todo Manage different genres here
         nameTracks(folderPath)
+        print("You can quit now or download more tracks or albums: ")
     # name an album
     elif question in ["Album", "a", "A", "al"]:
         # os.chdir("C:\\Users\\Flavio\\Music\\Youtube")
         albumArtist = input("Which Artist? ")
         albumName = input("Which Album? ")
         folderName = albumArtist + " - " + albumName
-        folderPath = getcwdFormat() + "/" + folderName
-        if not os.path.exists(folderName):
+        if os.path.exists(folderName):
+            folderName = getnewFolder(folderName)
             os.mkdir(folderName)
+        else:
+            os.mkdir(folderName)
+        folderPath = getcwdFormat() + "/" + folderName
         track_urls = []
         question = input("Enter a song url or \"finish\": ")
-        # while question not in ["f", "finished", "fi", "finish", "fin"]:
-        #   track_urls.append(question)
-        #  question = input("Enter a album song url or \"finish\": ")
-        downLoadTracks(magic, folderName)  # todo Change!!!!!
+        while question not in ["f", "finished", "fi", "finish", "fin"]:
+            track_urls.append(question)
+            question = input("Enter a album song url or \"finish\": ")
+        downLoadTracks(track_urls, folderName)
         print("Make sure every Track is named like Artist - TrackName Features")
         print("Example: Drake - Sneakin feat. 21 Savage")
         print("If Track has correct name just press enter, otherwise enter correct name and then enter")
-        for file in (os.listdir(folderPath)):
-            if file.endswith(".mp3"):
-                print(file.split(" - ")[1])
+        for mp3 in (os.listdir(folderPath)):
+            if mp3.endswith(".mp3"):
+                print(mp3.split(" - ")[1])
                 newname = input("Enter or new name: ")
                 if newname == "":
-                    os.rename(getcwdFormat() + "/" + folderName + "/" + file, getcwdFormat() + "/" + folderName + "/" + file.split(" - ")[1] + ".mp3")
+                    os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + mp3.split(" - ")[1] + ".mp3")
                 else:
-                    os.rename(getcwdFormat() + "/" + folderName + "/" + file, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
+                    os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
                     print("Saved new name!")
         specialGenre = input("Name a genre (default: [Hip-Hop/Rap]): ")
         print("Now doing the iTunes stats")
@@ -277,8 +290,9 @@ while True:
             nameAlbum(folderPath, albumArtist, albumName, specialGenre)
         else:
             nameAlbum(folderPath, albumArtist, albumName)
+        print("You can quit now or download more tracks or albums: ")
     # exit
     elif question == "exit":
         exit()
     else:
-        print("Please enter valid answer! ")
+        print("Please enter valid answer or \"exit\" to exit! ")
