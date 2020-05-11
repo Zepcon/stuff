@@ -7,7 +7,7 @@ Idea space:
 """
 
 import eyed3 as d3
-import os, os.path, datetime, requests, re, string, PIL.Image, youtube_dl
+import os, os.path, datetime, requests, re, string, PIL.Image, youtube_dl, json
 from bs4 import BeautifulSoup
 
 # path = "C:\\Users\\Flavio\\Music\\Youtube\\Weiteres"
@@ -222,7 +222,7 @@ def getnewFolder(folder):
 # Mainloop
 print("Welcome to YouTunes!")
 while True:
-    question = input("Download Tracks or album? ")
+    question = input("Download Tracks or Album? Or just json ")
     # name a couple of tracks
     if question in ["Tracks", "Track", "t", "T", "tr"]:
         folderName = "Singles - " + str(datetime.date.today())
@@ -272,16 +272,18 @@ while True:
             track_urls.append(question)
             question = input("Enter a album song url or \"finish\": ")
         downLoadTracks(track_urls, folderName)
-        print("Make sure every Track is named like Artist - TrackName Features")
-        print("Example: Drake - Sneakin feat. 21 Savage")
+        print("Make sure every Track is named like: TrackName feat. Features")
+        print("Example: Sneakin feat. 21 Savage (as an Drake album)")
         print("If Track has correct name just press enter, otherwise enter correct name and then enter")
         for mp3 in (os.listdir(folderPath)):
             if mp3.endswith(".mp3"):
-                print(mp3.split(" - ")[1])
+                #print(mp3.split("-")[1])
+                print(mp3)
                 newname = input("Enter or new name: ")
-                if newname == "":
-                    os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + mp3.split(" - ")[1] + ".mp3")
-                else:
+                if newname != "":
+                    #os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + mp3.split("-")[1] + ".mp3")
+                #     os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + ".mp3")
+                # else:
                     os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
                     print("Saved new name!")
         specialGenre = input("Name a genre (default: [Hip-Hop/Rap]): ")
@@ -290,6 +292,64 @@ while True:
             nameAlbum(folderPath, albumArtist, albumName, specialGenre)
         else:
             nameAlbum(folderPath, albumArtist, albumName)
+        print("You can quit now or download more tracks or albums: ")
+    elif question in ["json","j","js"]:
+        format = input("Is your json an album or just tracks? ")
+        if format in ["a","album","al"]:
+            albumArtist = input("Which artist? ")
+            albumName = input("Which album name? ")
+            format = "album"
+        elif format in ["tr","track","tracks","single","singles"]:
+            format = "tracks"
+            pass
+        else:
+            break
+        trackUrls = []
+        tracksList = []
+        filename = input("Enter the name of the json file without \".json\" (has to be in same directory as this program): ")
+        try:
+            with open(filename+".json", "r") as jsonfile:
+                jfile = json.load(jsonfile)
+        except:
+            print("Error occured, could not open file")
+            break
+        folderName = input("What should be new foldername? ")
+        if os.path.exists(folderName):
+            folderName = getnewFolder(folderName)
+            os.mkdir(folderName)
+        else:
+            os.mkdir(folderName)
+        folderPath = getcwdFormat() + "/" + folderName
+        for i in range(len(jfile)):
+            trackUrls.append(jfile[i]["url"])
+            tracksList.append(jfile[i]["title"])
+        downLoadTracks(trackUrls, folderName)
+        if format == "tracks":
+            print("Make sure every track ist named like: Artist - Trackname feat. Feature")
+            print("Example: Drake - Sneakin feat. 21 Savage")
+            print("If Track has correct name just press enter, otherwise enter correct name and then enter")
+        else:
+            print("Make sure every track ist named like: Trackname feat. Feature")
+            print("Example: Sneakin feat. 21 Savage (as an Album of Drake)")
+            print("If Track has correct name just press enter, otherwise enter correct name and then enter")
+        for mp3 in (os.listdir(folderPath)):
+            if mp3.endswith(".mp3"):
+                print(mp3)  # todo: Try to cut of the Artist name before single name for album downloads
+                newname = input("Enter or new name: ")
+                if newname != "":
+                    os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
+                    print("Saved new name!")
+        print("Now doing the iTunes stats")
+        if format == "tracks":
+            nameTracks(folderPath)
+        elif format == "album":
+            specialGenre = input("Name a genre (default: [Hip-Hop/Rap]): ")
+            if specialGenre != "":
+                nameAlbum(folderPath, albumArtist, albumName, specialGenre)
+            else:
+                nameAlbum(folderPath, albumArtist, albumName)
+        else:
+            pass
         print("You can quit now or download more tracks or albums: ")
     # exit
     elif question == "exit":
