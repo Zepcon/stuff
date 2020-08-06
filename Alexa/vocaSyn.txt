@@ -1,0 +1,120 @@
+to clean,,clean,cleaning,to polish,polish,polishing,to cleanse,cleanse,cleansing
+to print,,print,printing,to press,press,pressing
+to play,,play,playing,to act,act,acting,to gamble,gamble,gambling
+to rain,,rain,raining
+to scream,,scream,screaming,to yell,yell,yelling,to cry,cry,crying,to shout,shout,shouting
+to jump,,jump,jumping
+to drive,,drive,driving,to move,move,moving,to ride,ride,riding,to go,go,going
+to pull,,pull,pulling,to drag,drag,dragging
+to think,,think,thinking,to guess,guess,guessing,to figure,figure,figuring,to remember,remember,remembering
+to wash,,wash,washing,to launder,launder,laundering,to clean,clean,cleaning,to bath,bath,bathing
+to eliminate,,eliminate,eliminating,to purge,purge,purging,to wipe out,wipe out,wiping out
+to practice,,practice,practicing,to practise,practise,practising,to train,train,training,to exercise,exercise,exercising,to drill,drill,drilling
+to run,,run,running,to race,race,racing,to walk,walk,walking,to move,move,moving
+to square,,square,squaring
+to kick,,kick,kicking,to step,step,stepping
+to identify,,identify,identifying,to recognize,recognize,recognizing
+to throw,,throw,throwing,to cast,cast,casting,to toss,toss,tossing
+to cook,,cook,cooking,to boil,boil,boiling,to brew,brew,brewing
+to speak,,speak,to say,say,to communicate,communicate,to chat,chat,talk,to talk
+to read,,read,reading
+to drink,,drink,drinking
+to win,,win,winning,to gain,gain,gaining,to beat,beat,beating,to achieve,achieve,achieving
+to paint,,paint,painting,to draw,draw,drawing,to portray,portray,portraying
+to work,,work,working,to labour,labour,laboring,to operate,operate,operating
+to calculate,,calculate,calculating,to compute,compute,computing,to count,count,counting
+to cut,,cut,cutting,to trim,trim,trimming,to slice,slice,slicing
+to autopsy,,autopsy,autopsying,to obduct,obduct,obducting,to perform an autopsy,perform an autopsy,performing an autopsy
+to smell,,smell,smelling,to scent,scent,scenting,to reek,reek,reeking
+to write,,write,writing,to spell,spell,spelling
+to love,,love,loving,to cherish,cherish,cherishing
+to siu,,to sew,sew,sewing,to stitch,stitch,stitching,to needle,needle,needling
+to sing,,sing,singing,to chant,chant,chanting
+to dance,,dance,dancing,to spin,spin,spinning
+to fight,,fight,fighting,to struggle,struggle,struggling,to battle,battle,battling,to combat,combat,combating,to contest,contest,contesting
+to iron,,iron,ironing,to press,press,pressing
+to seek,,seek,seeking,to search,search,searching,to look for,look for,looking for
+to juggle,,juggle,juggling
+to discuss,,discuss,discussing,to debate,debate,debating,to dispute,dispute,disputing,to argue,argue,arguing,to moot,moot,mooting
+to avoid,,avoid,avoiding,to prevent,prevent,preventing,to avert,avert,averting
+to pray,,pray,praying,to daven,daven,daving
+balcony,,porch
+concrete,,cement
+building,,architecture,real estate
+vegetable,,veggie
+cable,,wire
+desk,,workspace,counter
+safety,,security,defense
+heating,,heater,radiator
+vocabulary,,dictionary
+button,,nub,knop,stud
+pants,,trousers
+carpet,,rug,carpeting
+book,
+child,,infant,kid
+government,,administration,regime,governance
+number,
+shop,,deal,business,store
+eye,
+money,,cash,funds
+point,,dot,period
+night,
+question,,demand,issue
+room,,space,chamber,zone
+school,
+story,,history
+time,,period,term
+water,
+bird,,griffin
+door,,doorway
+dream,
+duck,,canard,hoax
+example,,instance,sample
+flag,,ensign,banner,lug
+future,
+waste,,garbage,trash
+newspaper,,journal,gazette
+toy,,gewgaw
+triangle,
+stone,,rock,brick
+pen,,pencil,gib,nib
+ambitious,,energetic,aspiring
+feasible,,manageable,practicable,doable
+surprising,,astonishing,extraordinary,shocking,amazing
+invincible,,untouchable
+small,,little,short
+sweet,,cute
+unnecessary,,needless,irrelevant,avoidable
+random,,unplanned,odd,arbitrary
+sharp,,fierce
+important,,essential,crucial,urgent
+permissible,,lawful,acceptable
+excellent,,fine,perfect
+cloudy,,clouded,dense
+green,
+yellow,
+blue,
+purple,
+red,
+black,
+white,
+brown,
+high,,tall,big
+deep,,wide
+grey,
+helpful,
+boring,
+hairy,
+bloody,
+scary,,thrilling
+cursive,,italic
+left,
+fat,,bold
+silver,
+fast,
+funny,
+salty,,briny
+in time,,on time,duly
+perform,,list,stage,cite
+legal,,lawfully
+reachable,,accessible,approachable

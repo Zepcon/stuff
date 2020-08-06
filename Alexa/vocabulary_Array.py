@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
 import csv
 import os
 import sys
+import codecs
 
 """
-Programm mit der Entsprechenden csv aufrufen, um aus der Tabelle das javascript Array bauen zu lassen
+Programm mit der Entsprechenden csv (encoding utf-8) aufrufen, um aus der Tabelle das javascript Array bauen zu lassen.
+
+Nimmt die Tabelle und baut daraus das Array
 """
 
 def rightKey(key):
@@ -18,7 +22,8 @@ adjektiveKeys = []
 verbenFinished = False
 nomenFinished = False
 
-with open(sys.argv[1], newline="") as cee:
+# Hole die verschiedenen Wortarten aus der csv und teile sie auf
+with codecs.open(sys.argv[1], encoding="utf-8") as cee:
     smartreader = csv.reader(cee, quotechar='|')
     for row in smartreader:
         key = rightKey(row[0])
@@ -39,10 +44,11 @@ with open(sys.argv[1], newline="") as cee:
             else:
                 nomenFinished = True
         else: # Adjektive reinpacken
-            adjektiveKeys.append(key)
-            adjektive[key] = [row[0].split(";")[1]] # shitty key einmal abhandeln
-            for word in row[1:]: # values dazupacken
-               adjektive[key].append(word.strip())
+            if (key != '\ufeffVerben'):
+                adjektiveKeys.append(key)
+                adjektive[key] = [row[0].split(";")[1]] # shitty key einmal abhandeln
+                for word in row[1:]: # values dazupacken
+                   adjektive[key].append(word.strip())
 
 
 
@@ -56,10 +62,10 @@ array = [
     ...
 ]
 """
+# Baue das Array aus den verschiedenen Wortarten
 file = open("array.txt","a")
 
 file.write("var vocabulary = [ \n\n")
-
 counter = 0
 while (counter < len(nomen) or counter < len(verben) or counter < len(adjektive)):
     try:
@@ -76,13 +82,14 @@ while (counter < len(nomen) or counter < len(verben) or counter < len(adjektive)
         pass
     try:
         key = adjektiveKeys[counter]
-        file.write("[\'"+key+"\', "+str(adjektiveKeys[key]).lower()+"],\n")
+        file.write("[\'"+key+"\', "+str(adjektive[key]).lower()+"],\n")
     except:
         print("Alle Adjektive drin")
         pass
     counter +=1
+file.write("[\"ende\", [\"\"]]")
 print("Fertig!")
 file.write("\n];")
-print(len(nomen)+" Nomen")
-print(len(adjektive)+" Adjektive")
-print(len(verben)+" Verben")
+print(str(len(nomen))+" Nomen")
+print(str(len(adjektive))+" Adjektive")
+print(str(len(verben))+" Verben")

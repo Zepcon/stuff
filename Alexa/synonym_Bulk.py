@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import csv
 import os
 import sys
+import codecs
 
 """
 Für Bulk Edit in Amazon developer die einzelnen Vokabeln mit Synonymen zusammenbasteln.
@@ -19,7 +21,7 @@ adjektiveKeys = []
 verbenFinished = False
 nomenFinished = False
 
-with open("smart.csv", newline="") as cee:  # Arrays von oben mit Werten füttern
+with codecs.open(sys.argv[1], encoding="utf-8") as cee:  # Arrays von oben mit Werten füttern
     smartreader = csv.reader(cee, quotechar='|')
     for row in smartreader:
         key = rightKey(row[0])
@@ -51,7 +53,6 @@ file = open("vocaSyn.txt","a")
 
 builder = ""
 temp = ""
-print(adjektive)
 for i in verbenKeys:
     temp = ""
     for j in verben[i]:
