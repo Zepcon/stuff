@@ -14,6 +14,8 @@ from bs4 import BeautifulSoup
 # os.chdir(path)
 d3.log.setLevel("ERROR")  # So there are no warnings for non-standard genres
 
+# todo: Cut off playlist
+
 
 def nameTracks(folderpath, genre="[Hip-Hop/Rap]"):
     """ Tracks are saved as "Artist - TrackName"
@@ -28,7 +30,7 @@ def nameTracks(folderpath, genre="[Hip-Hop/Rap]"):
                 singleCover = findSingleCover(trackArtist, title)
                 audiofile = d3.load(filepath)
                 audiofile.tag.genre = genre
-                audiofile.tag.release_date = datetime.datetime.now().year  # bug: year is shown on windows explorer but not in iTunes, same string
+                audiofile.tag.recording_date = datetime.datetime.now().year
                 audiofile.tag.artist = trackArtist
                 audiofile.tag.track_num = 1
                 if title.find(" ft.") != -1:  # cut off features als well for the album name
@@ -59,7 +61,7 @@ def nameAlbum(folderpath, artist, album, genre="[Hip-Hop/Rap]"):
             title = file.partition(".mp3")[0]
             audiofile = d3.load(folderpath + "/" + file)
             audiofile.tag.genre = genre
-            audiofile.tag.release_date = datetime.datetime.now().year
+            audiofile.tag.recording_date = datetime.datetime.now().year
             audiofile.tag.artist = artist
             try:
                 # todo: Check so machen, dass nur groß oder nur kleinschreibung angeschaut werden und Zeichen wie ' berücksichtigen
@@ -118,7 +120,7 @@ def findAlbumCover(artist, album):
         splittedLink[4] = "1000x1000"
         imageURL = "/".join(splittedLink)
         coverRaw = requests.get(imageURL, stream=True)
-        filename = artist + "-" + album + ".jpg"
+        filename = artist + "_" + album + ".jpg"
         with open(imagePath + filename, "wb") as outfile:
             for block in coverRaw.iter_content(1024):
                 if not block:
@@ -151,7 +153,7 @@ def findSingleCover(artist, single):
         splittedLink[4] = "1000x1000"
         imageURL = "/".join(splittedLink)
         coverRaw = requests.get(imageURL, stream=True)
-        filename = artist + "-" + single + ".jpg"
+        filename = artist + "_" + single + ".jpg"
         with open(imagePath + filename, "wb") as outfile:
             for block in coverRaw.iter_content(1024):
                 if not block:
@@ -307,6 +309,7 @@ while True:
         trackUrls = []
         tracksList = []
         filename = input("Enter the name of the json file without \".json\" (has to be in same directory as this program): ")
+        # todo: Take the titles out of the json to name the files before asking the user
         try:
             with open(filename+".json", "r") as jsonfile:
                 jfile = json.load(jsonfile)
@@ -325,20 +328,30 @@ while True:
             tracksList.append(jfile[i]["title"])
         downLoadTracks(trackUrls, folderName)
         if format == "tracks":
+            print("\n\n\n")
             print("Make sure every track ist named like: Artist - Trackname feat. Feature")
             print("Example: Drake - Sneakin feat. 21 Savage")
             print("If Track has correct name just press enter, otherwise enter correct name and then enter")
         else:
+            print("\n\n\n")
             print("Make sure every track ist named like: Trackname feat. Feature")
             print("Example: Sneakin feat. 21 Savage (as an Album of Drake)")
             print("If Track has correct name just press enter, otherwise enter correct name and then enter")
         for mp3 in (os.listdir(folderPath)):
             if mp3.endswith(".mp3"):
-                print(mp3)  # todo: Try to cut of the Artist name before single name for album downloads
-                newname = input("Enter or new name: ")
-                if newname != "":
-                    os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
-                    print("Saved new name!")
+                if mp3.find("-") != -1:  # cut of the artist (if existing) because we dont need it for album
+                    newname = mp3[mp3.find("-")+1:].strip()
+                    while newname.find("-") != -1:  # Maybe the filname has multiple minusses, so just cut everything off
+                        newname = renameDownloadTrack(newname)
+                    print(newname)
+                else:
+                    newname = mp3
+                    print(mp3)
+                namechange = input("Enter or new name: ")
+                if namechange != "":
+                    newname = namechange
+                os.rename(getcwdFormat() + "/" + folderName + "/" + mp3, getcwdFormat() + "/" + folderName + "/" + newname + ".mp3")
+                print("Saved new name!")
         print("Now doing the iTunes stats")
         if format == "tracks":
             nameTracks(folderPath)
@@ -352,7 +365,7 @@ while True:
             pass
         print("You can quit now or download more tracks or albums: ")
     # exit
-    elif question == "exit":
+    elif question in ["exit","e"]:
         exit()
     else:
         print("Please enter valid answer or \"exit\" to exit! ")
