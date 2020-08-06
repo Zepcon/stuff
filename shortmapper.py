@@ -17,7 +17,7 @@ try:
                 newfile.write("MsgBox, " + tip)
                 for short in pl:
                     try:
-                        newfile.write("::"+short["shortcut"]+" ::"+short["phrase"]+"\n")
+                        newfile.write("::"+short["shortcut"]+"::"+short["phrase"]+"\n")
                     except Exception:
                         print("Could not parse shortcut: "+ short["shortcut"])
                         pass
